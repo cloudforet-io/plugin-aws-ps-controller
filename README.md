@@ -1,0 +1,1 @@
+# plugin-aws-power-scheduler-controller
