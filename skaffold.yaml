@@ -1,0 +1,10 @@
+apiVersion: skaffold/v2beta2
+kind: Config
+build:
+  artifacts:
+    - image: plugin-aws-power-scheduler-controller
+      context: ./
+deploy:
+  kubectl:
+    manifests:
+      - ./deployment.yaml
