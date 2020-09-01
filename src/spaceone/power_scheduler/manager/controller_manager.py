@@ -9,11 +9,25 @@ from spaceone.core.manager import BaseManager
 
 _LOGGER = logging.getLogger(__name__)
 
+RESOURCE_TYPE_SERVER = 'inventory.Server'
+RESOURCE_TYPE_ASG = 'inventory.CloudService.aws.AutoScaling.AutoScalingGroup'
+RESOURCE_TYPE_RDS_DB = 'inventory.CloudService.aws.RDS.Database'
+
 class ControllerManager(BaseManager):
 
     def __init__(self, transaction):
         super().__init__(transaction)
+        # Server
         self._instanceIds = []
+
+        # AutoScalingGroup
+        self._autoScalingGroups = []
+        self._asg_desired_capacity = {}
+        self._asg_min_size = {}
+
+        # RDS
+        self._rdsInstances = []
+        self._rdsClusters = []
 
     def verify(self, secret_data, region_name):
         """ Check connection
@@ -26,25 +40,102 @@ class ControllerManager(BaseManager):
     def start(self, secret_data, region_name, resource_list):
         """ Check connection
         """
-        # TODO: Try to start resources by resource_list
-        ec2_connector = self.locator.get_connector('EC2Connector')
-        ec2_connector.set_client(secret_data, region_name)
-
         self._set_resources_by_resource_type(resource_list)
 
-        ec2_connector.start_instances(self._get_resources('inventory.Server'))
+        if len(self._instanceIds) > 0:
+            ec2_connector = self.locator.get_connector('EC2Connector')
+            ec2_connector.set_client(secret_data, region_name)
+            # Step 1 : Get instances from requested input params
+            instances = ec2_connector.get_ec2_instance_list(self._get_resources(RESOURCE_TYPE_SERVER))
+
+            # Step 2 : Filtered resources by status
+            stopped_instances = self._get_ec2_instance_list_by_status(instances, 'stopped')
+
+            # Step 3 : Request to start resources to provider
+            stopped_instances_ids = self._get_ec2_instance_ids(stopped_instances)
+            ec2_connector.start_instances(stopped_instances_ids)
+
+        if len(self._autoScalingGroups) > 0:
+            auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
+            auto_scaling_connector.set_client(secret_data, region_name)
+            auto_scaling_connector.start_auto_scaling(self._get_resources(RESOURCE_TYPE_ASG),
+            self._get_min_size(), self._get_desired_capacity())
+
+        return {}
+
+    def stop(self, secret_data, region_name, resource_list):
+        """ Check connection
+        """
+        self._set_resources_by_resource_type(resource_list)
+
+        if len(self._instanceIds) > 0:
+            ec2_connector = self.locator.get_connector('EC2Connector')
+            ec2_connector.set_client(secret_data, region_name)
+            # Step 1 : Get instances from requested input params
+            instances = ec2_connector.get_ec2_instance_list(self._get_resources(RESOURCE_TYPE_SERVER))
+
+            # Step 2 : Filtered resources by status
+            running_instances = self._get_ec2_instance_list_by_status(instances, 'running')
+
+            # Step 3 : Request to stop resources to provider
+            running_instances_ids = self._get_ec2_instance_ids(running_instances)
+            ec2_connector.stop_instances(running_instances_ids)
+
+        if len(self._autoScalingGroups) > 0:
+            auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
+            auto_scaling_connector.set_client(secret_data, region_name)
+            auto_scaling_connector.stop_auto_scaling(self._get_resources(RESOURCE_TYPE_ASG))
 
         return {}
 
     def _set_resources_by_resource_type(self, resource_list):
-        for resource in resource_list:
-            _LOGGER.debug(f'[_set_resources_by_resource_type] resource: {resource}')
-            if resource['resource_type'] == 'inventory.Server':
-                instanceId = resource['resource']
+        for r in resource_list:
+            _LOGGER.debug(f'[_set_resources_by_resource_type] resource: {r}')
+            if r['resource_type'] == RESOURCE_TYPE_SERVER:
+                instanceId = r['resource']['id']
                 self._instanceIds.append(instanceId)
                 _LOGGER.debug(f'[_set_resources_by_resource_type] instanceId: {instanceId}')
+            if r['resource_type'] == RESOURCE_TYPE_ASG:
+                asg_name = r['resource']['id']
+                self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
+                self._asg_min_size[asg_name] = r['resource']['min_size']
+                self._autoScalingGroups.append(asg_name)
+                _LOGGER.debug(f'[_set_resources_by_resource_type] asg_name: {asg_name}')
 
     def _get_resources(self, resource_type):
         # TODO: Try to add other resources by resource_type
-        _LOGGER.debug(f'[_get_resources] instanceId: {self._instanceIds}')
-        return self._instanceIds
+        if resource_type == RESOURCE_TYPE_SERVER:
+            _LOGGER.debug(f'[_get_resources] instanceId: {self._instanceIds}')
+            return self._instanceIds
+
+        if resource_type == RESOURCE_TYPE_ASG:
+            _LOGGER.debug(f'[_get_resources] ASGs: {self._autoScalingGroups}')
+            return self._autoScalingGroups
+
+        return None
+
+    def _get_desired_capacity(self):
+        return self._asg_desired_capacity
+
+    def _get_min_size(self):
+        return self._asg_min_size
+
+    def _get_ec2_instance_list_by_status(self, ec2_instance_list, status) -> list:
+        filtered_ec2_instance_list = []
+
+        for ec2_instance in ec2_instance_list:
+            if self._get_ec2_instance_status(ec2_instance) == status:
+                filtered_ec2_instance_list.append(ec2_instance)
+
+        return filtered_ec2_instance_list
+
+    def _get_ec2_instance_status(self, ec2_instance) -> str:
+        return ec2_instance['State']['Name']
+
+    def _get_ec2_instance_ids(self, ec2_instance_list) -> list:
+        ec2_instance_ids = []
+
+        for ec2_instance in ec2_instance_list:
+            ec2_instance_ids.append(ec2_instance['InstanceId'])
+
+        return ec2_instance_ids
