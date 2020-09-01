@@ -76,11 +76,46 @@ class ControllerService(BaseService):
         manager = self.locator.get_manager('ControllerManager')
         resource_list = params['resources']
         secret_data = params['secret_data']
-        region_name = params.get('region_name', DEFAULT_REGION)
+        region_name = DEFAULT_REGION
 
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+
+        _LOGGER.debug(f'[start] region_name: {region_name}')
         _LOGGER.debug(f'[start] resources: {params["resources"]}')
         _LOGGER.debug(f'[start] secret_data: {params["secret_data"]}')
 
         manager.start(secret_data, region_name, resource_list)
+
+        return {}
+
+    @transaction
+    @check_required(['options','secret_data','resources'])
+    def stop(self, params):
+        """ verify options capability
+        Args:
+            params
+              - options : dict
+              - secret_data: dict
+              - resources: list
+
+        Returns:
+
+        Raises:
+             ERROR_VERIFY_FAILED:
+        """
+        manager = self.locator.get_manager('ControllerManager')
+        resource_list = params['resources']
+        secret_data = params['secret_data']
+        region_name = DEFAULT_REGION
+
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+
+        _LOGGER.debug(f'[stop] region_name: {region_name}')
+        _LOGGER.debug(f'[stop] resources: {params["resources"]}')
+        _LOGGER.debug(f'[stop] secret_data: {params["secret_data"]}')
+
+        manager.stop(secret_data, region_name, resource_list)
 
         return {}
