@@ -58,8 +58,15 @@ class ControllerManager(BaseManager):
         if len(self._autoScalingGroups) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
-            auto_scaling_connector.start_auto_scaling(self._get_resources(RESOURCE_TYPE_ASG),
-            self._get_min_size(), self._get_desired_capacity())
+            # Step 1 : Get ASGs from requested input params
+            autoScalingGroups = auto_scaling_connector.get_asg_list(self._get_resources(RESOURCE_TYPE_ASG))
+
+            # Step 2 : Filtered resources by status
+            stopped_ASGs = self._get_asg_list_by_status(autoScalingGroups, 'stopped')
+
+            # Step 3 : Request to start resources to provider
+            stopped_asg_names = self._get_asg_names(stopped_ASGs)
+            auto_scaling_connector.start_auto_scaling(stopped_asg_names, self._get_min_size(), self._get_desired_capacity())
 
         return {}
 
@@ -84,7 +91,15 @@ class ControllerManager(BaseManager):
         if len(self._autoScalingGroups) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
-            auto_scaling_connector.stop_auto_scaling(self._get_resources(RESOURCE_TYPE_ASG))
+            # Step 1 : Get ASGs from requested input params
+            autoScalingGroups = auto_scaling_connector.get_asg_list(self._get_resources(RESOURCE_TYPE_ASG))
+
+            # Step 2 : Filtered resources by status
+            running_ASGs = self._get_asg_list_by_status(autoScalingGroups, 'running')
+
+            # Step 3 : Request to start resources to provider
+            running_asg_names = self._get_asg_names(running_ASGs)
+            auto_scaling_connector.stop_auto_scaling(running_asg_names)
 
         return {}
 
@@ -97,8 +112,9 @@ class ControllerManager(BaseManager):
                 _LOGGER.debug(f'[_set_resources_by_resource_type] instanceId: {instanceId}')
             if r['resource_type'] == RESOURCE_TYPE_ASG:
                 asg_name = r['resource']['id']
-                self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
-                self._asg_min_size[asg_name] = r['resource']['min_size']
+                if 'desired_capacity' in r['resource'] and 'min_size' in r['resource']:
+                    self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
+                    self._asg_min_size[asg_name] = r['resource']['min_size']
                 self._autoScalingGroups.append(asg_name)
                 _LOGGER.debug(f'[_set_resources_by_resource_type] asg_name: {asg_name}')
 
@@ -119,6 +135,39 @@ class ControllerManager(BaseManager):
 
     def _get_min_size(self):
         return self._asg_min_size
+
+    def _get_asg_list_by_status(self, asg_list, status) -> list:
+        filtered_asg_list = []
+
+        for asg in asg_list:
+            if self._get_asg_status(asg) == status:
+                filtered_asg_list.append(asg)
+
+        return filtered_asg_list
+
+    def _get_asg_status(self, asg) -> str:
+        inservice_count = 0
+        desired_capacity = asg['DesiredCapacity']
+
+        if desired_capacity == 0:
+            return 'stopped'
+
+        for instance in asg['Instances']:
+            if instance['LifecycleState'] == 'InService':
+                inservice_count += 1
+
+        if desired_capacity == inservice_count:
+            return 'running'
+
+        return 'stopped'
+
+    def _get_asg_names(self, asg_list) -> list:
+        asg_names = []
+
+        for asg in asg_list:
+            asg_names.append(asg['AutoScalingGroupName'])
+
+        return asg_names
 
     def _get_ec2_instance_list_by_status(self, ec2_instance_list, status) -> list:
         filtered_ec2_instance_list = []
