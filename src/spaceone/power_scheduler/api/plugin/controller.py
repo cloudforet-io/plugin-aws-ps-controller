@@ -1,6 +1,10 @@
+import logging
+
 from spaceone.api.power_scheduler.plugin import controller_pb2, controller_pb2_grpc
 from spaceone.core.pygrpc import BaseAPI
+from spaceone.core.pygrpc.message_type import *
 
+_LOGGER = logging.getLogger(__name__)
 
 class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
 
@@ -25,12 +29,32 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            controller_svc.start(params)
+            for resource in controller_svc.start(params):
+                _LOGGER.debug(f'[start] response resource: {resource}')
+                res = {
+                    'state': 'SUCCESS',
+                    'message': '',
+                    'resource_type': '',
+                    'resource': change_struct_type(resource)
+                }
+                _LOGGER.debug(f'[start] response res (struct type): {res}')
+
+                #yield self.locator.get_info('ResourceInfo', res)
             return self.locator.get_info('EmptyInfo')
 
     def stop(self, request, context):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            controller_svc.stop(params)
+            for resource in controller_svc.stop(params):
+                _LOGGER.debug(f'[stop] response resource: {resource}')
+                res = {
+                    'state': 'SUCCESS',
+                    'message': '',
+                    'resource_type': '',
+                    'resource': change_struct_type(resource)
+                }
+                _LOGGER.debug(f'[stop] response res (struct type): {res}')
+
+                #yield self.locator.get_info('ResourceInfo', res)
             return self.locator.get_info('EmptyInfo')

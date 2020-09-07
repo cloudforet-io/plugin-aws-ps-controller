@@ -70,11 +70,13 @@ class EC2Connector(BaseConnector):
         self.ec2_client = self.session.client('ec2')
 
     def start_instances(self, instance_ids, **query):
+        _LOGGER.debug(f'[EC2Connector] Start instances, instance_ids : {instance_ids}')
         response = self.ec2_client.start_instances(InstanceIds=instance_ids, **query)
         _LOGGER.info(f'[EC2Connector] Start instances : {response}')
         return response
 
     def stop_instances(self, instance_ids, **query):
+        _LOGGER.debug(f'[EC2Connector] Stop instances, instance_ids : {instance_ids}')
         response = self.ec2_client.stop_instances(InstanceIds=instance_ids, Force=True, **query)
         _LOGGER.info(f'[EC2Connector] Stop instances : {response}')
         return response

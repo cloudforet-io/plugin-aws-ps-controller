@@ -92,4 +92,15 @@ class AutoScalingConnector(BaseConnector):
                 response_list.append(res)
 
         return response_list
-      
+
+    def get_asg_list(self, asg_names) -> list:
+        asg_list = []
+        for asg_name in asg_names:
+            response = self.asg_client.describe_auto_scaling_groups(
+                AutoScalingGroupNames=[
+                    asg_name,
+                ],
+            )
+            asg_list.append(response['AutoScalingGroups'][0])
+
+        return asg_list

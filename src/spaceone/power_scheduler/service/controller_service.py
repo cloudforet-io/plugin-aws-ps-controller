@@ -1,11 +1,14 @@
+import time
 import logging
+import concurrent.futures
 
 from spaceone.core.service import *
 from spaceone.power_scheduler.manager.controller_manager import ControllerManager
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_REGION = 'us-east-1'
 SUPPORTED_RESOURCE_TYPE = ['power_scheduler.Server']
+DEFAULT_REGION = 'us-east-1'
+NUMBER_OF_CONCURRENT = 20
 FILTER_FORMAT = []
 
 @authentication_handler
@@ -59,63 +62,68 @@ class ControllerService(BaseService):
         return {}
 
     @transaction
-    @check_required(['options','secret_data','resources'])
+    @check_required(['resources_params'])
     def start(self, params):
         """ verify options capability
         Args:
             params
-              - options : dict
-              - secret_data: dict
-              - resources: list
+              - resources_params: list
 
         Returns:
 
         Raises:
              ERROR_VERIFY_FAILED:
         """
-        manager = self.locator.get_manager('ControllerManager')
-        resource_list = params['resources']
-        secret_data = params['secret_data']
-        region_name = DEFAULT_REGION
+        start_time = time.time()
 
-        if 'region_name' in secret_data:
-            region_name = secret_data['region_name']
+        resources_params = params['resources_params']
 
-        _LOGGER.debug(f'[start] region_name: {region_name}')
-        _LOGGER.debug(f'[start] resources: {params["resources"]}')
-        _LOGGER.debug(f'[start] secret_data: {params["secret_data"]}')
+        _LOGGER.debug(f'[start] resources_params: {params["resources_params"]}')
 
-        manager.start(secret_data, region_name, resource_list)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
+            future_executors = []
+            for r_param in resources_params:
+                future_executors.append(executor.submit(self.collector_manager.start, r_param))
+
+            for future in concurrent.futures.as_completed(future_executors):
+                for result in future.result():
+                    _LOGGER.debug(f'[start] result: {result}')
+
+                    yield result
+
+        print(f'############## TOTAL START FINISHED {time.time() - start_time} Sec ##################')
 
         return {}
 
     @transaction
-    @check_required(['options','secret_data','resources'])
+    @check_required(['resources_params'])
     def stop(self, params):
         """ verify options capability
         Args:
             params
-              - options : dict
-              - secret_data: dict
-              - resources: list
+              - resources_params: list
 
         Returns:
 
         Raises:
              ERROR_VERIFY_FAILED:
         """
-        manager = self.locator.get_manager('ControllerManager')
-        resource_list = params['resources']
-        secret_data = params['secret_data']
-        region_name = DEFAULT_REGION
+        start_time = time.time()
 
-        if 'region_name' in secret_data:
-            region_name = secret_data['region_name']
+        resources_params = params['resources_params']
 
-        _LOGGER.debug(f'[stop] region_name: {region_name}')
-        _LOGGER.debug(f'[stop] resources: {params["resources"]}')
-        _LOGGER.debug(f'[stop] secret_data: {params["secret_data"]}')
+        _LOGGER.debug(f'[stop] resources_params: {params["resources_params"]}')
 
-        manager.stop(secret_data, region_name, resource_list)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
+            future_executors = []
+            for r_param in resources_params:
+                future_executors.append(executor.submit(self.collector_manager.stop, r_param))
+
+            for future in concurrent.futures.as_completed(future_executors):
+                for result in future.result():
+                    _LOGGER.debug(f'[stop] result: {result}')
+
+                    yield result
+        print(f'############## TOTAL STOP FINISHED {time.time() - start_time} Sec ##################')
 
         return {}
