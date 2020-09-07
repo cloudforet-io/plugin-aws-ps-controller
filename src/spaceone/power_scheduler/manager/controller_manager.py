@@ -13,6 +13,8 @@ RESOURCE_TYPE_SERVER = 'inventory.Server'
 RESOURCE_TYPE_ASG = 'inventory.CloudService.aws.AutoScaling.AutoScalingGroup'
 RESOURCE_TYPE_RDS_DB = 'inventory.CloudService.aws.RDS.Database'
 
+DEFAULT_REGION = 'us-east-1'
+
 class ControllerManager(BaseManager):
 
     def __init__(self, transaction):
@@ -37,10 +39,18 @@ class ControllerManager(BaseManager):
         # ACTIVE/UNKNOWN
         return r
 
-    def start(self, secret_data, region_name, resource_list):
+    def start(self, resource_param):
         """ Check connection
         """
+
+        secret_data = resource_param['secret_data']
+        resource_list = resource_param['resources']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+
         self._set_resources_by_resource_type(resource_list)
+        result_list = []
 
         if len(self._instanceIds) > 0:
             ec2_connector = self.locator.get_connector('EC2Connector')
@@ -53,7 +63,8 @@ class ControllerManager(BaseManager):
 
             # Step 3 : Request to start resources to provider
             stopped_instances_ids = self._get_ec2_instance_ids(stopped_instances)
-            ec2_connector.start_instances(stopped_instances_ids)
+            ec2_result = ec2_connector.start_instances(stopped_instances_ids)
+            result_list.append(ec2_result)
 
         if len(self._autoScalingGroups) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
@@ -66,14 +77,22 @@ class ControllerManager(BaseManager):
 
             # Step 3 : Request to start resources to provider
             stopped_asg_names = self._get_asg_names(stopped_ASGs)
-            auto_scaling_connector.start_auto_scaling(stopped_asg_names, self._get_min_size(), self._get_desired_capacity())
+            asg_result = auto_scaling_connector.start_auto_scaling(stopped_asg_names, self._get_min_size(), self._get_desired_capacity())
+            result_list.append(asg_result)
 
-        return {}
+        return result_list
 
-    def stop(self, secret_data, region_name, resource_list):
+    def stop(self, resource_param):
         """ Check connection
         """
+        secret_data = resource_param['secret_data']
+        resource_list = resource_param['resources']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+
         self._set_resources_by_resource_type(resource_list)
+        result_list = []
 
         if len(self._instanceIds) > 0:
             ec2_connector = self.locator.get_connector('EC2Connector')
@@ -86,7 +105,8 @@ class ControllerManager(BaseManager):
 
             # Step 3 : Request to stop resources to provider
             running_instances_ids = self._get_ec2_instance_ids(running_instances)
-            ec2_connector.stop_instances(running_instances_ids)
+            ec2_result = ec2_connector.stop_instances(running_instances_ids)
+            result_list.append(ec2_result)
 
         if len(self._autoScalingGroups) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
@@ -97,11 +117,12 @@ class ControllerManager(BaseManager):
             # Step 2 : Filtered resources by status
             running_ASGs = self._get_asg_list_by_status(autoScalingGroups, 'running')
 
-            # Step 3 : Request to start resources to provider
+            # Step 3 : Request to stop resources to provider
             running_asg_names = self._get_asg_names(running_ASGs)
-            auto_scaling_connector.stop_auto_scaling(running_asg_names)
+            asg_result = auto_scaling_connector.stop_auto_scaling(running_asg_names)
+            result_list.append(asg_result)
 
-        return {}
+        return result_list
 
     def _set_resources_by_resource_type(self, resource_list):
         for r in resource_list:
