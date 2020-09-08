@@ -38,7 +38,7 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
                     'resource': change_struct_type(resource)
                 }
                 _LOGGER.debug(f'[start] response res (struct type): {res}')
-
+                # TODO(check) : Need to check if there is a way for API test(spacectl) with yield like below
                 #yield self.locator.get_info('ResourceInfo', res)
             return self.locator.get_info('EmptyInfo')
 
