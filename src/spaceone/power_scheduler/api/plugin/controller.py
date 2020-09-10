@@ -29,43 +29,12 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            for resource in controller_svc.start(params):
-                _LOGGER.debug(f'[start] response resource: {resource}')
-                res = {
-                    'state': 'SUCCESS',
-                    'message': '',
-                    'resource_type': '',
-                    'resource': change_struct_type(resource)
-                }
-                _LOGGER.debug(f'[start] response res (struct type): {res}')
-                # TODO(check) : Need to check if there is a way for API test(spacectl) with yield like below
-                #yield self.locator.get_info('ResourceInfo', res)
+            controller_svc.start(params)
             return self.locator.get_info('EmptyInfo')
 
     def stop(self, request, context):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            for resource in controller_svc.stop(params):
-                _LOGGER.debug(f'[stop] response resource: {resource}')
-                res = {
-                    'state': 'SUCCESS',
-                    'message': '',
-                    'resource_type': '',
-                    'resource': change_struct_type(resource)
-                }
-                _LOGGER.debug(f'[stop] response res (struct type): {res}')
-
-                #yield self.locator.get_info('ResourceInfo', res)
+            controller_svc.stop(params)
             return self.locator.get_info('EmptyInfo')
-
-    def getRetryResourceStatus(self, request, context):
-        params, metadata = self.parse_request(request, context)
-
-        with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            resources, schedule_status = controller_svc.getRetryResourceStatus(params)
-            res = {
-                'requested_schedule_status': schedule_status,
-                'resources': resources
-            }
-            return self.locator.get_info('RetryResourceStatusInfo', res)

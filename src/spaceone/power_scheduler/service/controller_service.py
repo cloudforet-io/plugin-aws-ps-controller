@@ -42,6 +42,7 @@ class ControllerService(BaseService):
 
     @transaction
     @check_required(['options','secret_data'])
+    @append_query_filter(['schema'])
     def verify(self, params):
         """ verify options capability
         Args:
@@ -54,111 +55,68 @@ class ControllerService(BaseService):
         Raises:
              ERROR_VERIFY_FAILED:
         """
-        manager = self.locator.get_manager('ControllerManager')
         secret_data = params['secret_data']
         region_name = params.get('region_name', DEFAULT_REGION)
-        active = manager.verify(secret_data, region_name)
+        active = self.controller_manager.verify(secret_data, region_name)
 
         return {}
 
     @transaction
-    @check_required(['resources_params'])
+    @check_required(['options','secret_data','resource_id','resource_type'])
+    @append_query_filter(['schema', 'resource_data'])
     def start(self, params):
         """ verify options capability
         Args:
             params
-              - resources_params: list
+              - options: list
+              - secret_data: dict
+              - resource_id: string
+              - resource_type: string
+              - resource_data: dict
+              - schema: string
 
         Returns:
-
-        Raises:
-             ERROR_VERIFY_FAILED:
         """
-        start_time = time.time()
+        secret_data = params['secret_data']
+        resource_id = params['resource_id']
+        resource_type = params['resource_type']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+        resource_data = None
+        if 'resource_data' in params:
+            resource_data = params['resource_data']
 
-        resources_params = params['resources_params']
-
-        _LOGGER.debug(f'[start] resources_params: {params["resources_params"]}')
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-            future_executors = []
-            for resource_param in resources_params:
-                future_executors.append(executor.submit(self.controller_manager.start, resource_param))
-
-            for future in concurrent.futures.as_completed(future_executors):
-                for result in future.result():
-                    _LOGGER.debug(f'[start] result: {result}')
-
-                    yield result
-
-        print(f'############## TOTAL START FINISHED {time.time() - start_time} Sec ##################')
+        self.controller_manager.start(secret_data, region_name, resource_id, resource_type, resource_data)
 
         return {}
 
     @transaction
-    @check_required(['resources_params'])
+    @check_required(['options','secret_data','resource_id','resource_type'])
+    @append_query_filter(['schema', 'resource_data'])
     def stop(self, params):
         """ verify options capability
         Args:
             params
-              - resources_params: list
+              - options: list
+              - secret_data: dict
+              - resource_id: string
+              - resource_type: string
+              - resource_data: dict
+              - schema: string
 
         Returns:
-
-        Raises:
-             ERROR_VERIFY_FAILED:
         """
-        start_time = time.time()
+        secret_data = params['secret_data']
+        resource_id = params['resource_id']
+        resource_type = params['resource_type']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+        resource_data = None
+        if 'resource_data' in params:
+            resource_data = params['resource_data']
 
-        resources_params = params['resources_params']
-
-        _LOGGER.debug(f'[stop] resources_params: {params["resources_params"]}')
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-            future_executors = []
-            for resource_param in resources_params:
-                future_executors.append(executor.submit(self.controller_manager.stop, resource_param))
-
-            for future in concurrent.futures.as_completed(future_executors):
-                for result in future.result():
-                    _LOGGER.debug(f'[stop] result: {result}')
-
-                    yield result
-        print(f'############## TOTAL STOP FINISHED {time.time() - start_time} Sec ##################')
+        self.controller_manager.stop(secret_data, region_name, resource_id, resource_type, resource_data)
 
         return {}
-
-    @transaction
-    @check_required(['schedule_status','target_resources_params'])
-    def getRetryResourceStatus(self, params):
-        """ verify options capability
-        Args::q:q:
-            params
-              - schedule_status: string
-              - target_resources_params: list
-
-        Returns:
-
-        Raises:
-             ERROR_VERIFY_FAILED:
-        """
-        start_time = time.time()
-        schedule_status = params['schedule_status']
-        target_resources_params = params['target_resources_params']
-        res = []
-
-        _LOGGER.debug(f'[getRetryResourceStatus] target_resources: {params["target_resources_params"]}')
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
-            future_executors = []
-            for resource_param in target_resources_params:
-                future_executors.append(executor.submit(self.controller_manager.getRetryResourceStatus, resource_param))
-
-            for future in concurrent.futures.as_completed(future_executors):
-                for result in future.result():
-                    _LOGGER.debug(f'[getRetryResourceStatus] result: {result}')
-                    res.append(result)
-
-        print(f'############## TOTAL START FINISHED {time.time() - start_time} Sec ##################')
-
-        return res, schedule_status
