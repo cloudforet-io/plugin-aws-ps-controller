@@ -58,3 +58,14 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
 
                 #yield self.locator.get_info('ResourceInfo', res)
             return self.locator.get_info('EmptyInfo')
+
+    def getRetryResourceStatus(self, request, context):
+        params, metadata = self.parse_request(request, context)
+
+        with self.locator.get_service('ControllerService', metadata) as controller_svc:
+            resources, schedule_status = controller_svc.getRetryResourceStatus(params)
+            res = {
+                'requested_schedule_status': schedule_status,
+                'resources': resources
+            }
+            return self.locator.get_info('RetryResourceStatusInfo', res)
