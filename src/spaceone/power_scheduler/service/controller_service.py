@@ -15,7 +15,7 @@ FILTER_FORMAT = []
 class ControllerService(BaseService):
     def __init__(self, metadata):
         super().__init__(metadata)
-        self.collector_manager: ControllerManager = self.locator.get_manager('ControllerManager')
+        self.controller_manager: ControllerManager = self.locator.get_manager('ControllerManager')
 
     @check_required(['options'])
     def init(self, params):
@@ -82,8 +82,8 @@ class ControllerService(BaseService):
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
             future_executors = []
-            for r_param in resources_params:
-                future_executors.append(executor.submit(self.collector_manager.start, r_param))
+            for resource_param in resources_params:
+                future_executors.append(executor.submit(self.controller_manager.start, resource_param))
 
             for future in concurrent.futures.as_completed(future_executors):
                 for result in future.result():
@@ -116,8 +116,8 @@ class ControllerService(BaseService):
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
             future_executors = []
-            for r_param in resources_params:
-                future_executors.append(executor.submit(self.collector_manager.stop, r_param))
+            for resource_param in resources_params:
+                future_executors.append(executor.submit(self.controller_manager.stop, resource_param))
 
             for future in concurrent.futures.as_completed(future_executors):
                 for result in future.result():
@@ -127,3 +127,38 @@ class ControllerService(BaseService):
         print(f'############## TOTAL STOP FINISHED {time.time() - start_time} Sec ##################')
 
         return {}
+
+    @transaction
+    @check_required(['schedule_status','target_resources_params'])
+    def getRetryResourceStatus(self, params):
+        """ verify options capability
+        Args::q:q:
+            params
+              - schedule_status: string
+              - target_resources_params: list
+
+        Returns:
+
+        Raises:
+             ERROR_VERIFY_FAILED:
+        """
+        start_time = time.time()
+        schedule_status = params['schedule_status']
+        target_resources_params = params['target_resources_params']
+        res = []
+
+        _LOGGER.debug(f'[getRetryResourceStatus] target_resources: {params["target_resources_params"]}')
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CONCURRENT) as executor:
+            future_executors = []
+            for resource_param in target_resources_params:
+                future_executors.append(executor.submit(self.controller_manager.getRetryResourceStatus, resource_param))
+
+            for future in concurrent.futures.as_completed(future_executors):
+                for result in future.result():
+                    _LOGGER.debug(f'[getRetryResourceStatus] result: {result}')
+                    res.append(result)
+
+        print(f'############## TOTAL START FINISHED {time.time() - start_time} Sec ##################')
+
+        return res, schedule_status

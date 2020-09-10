@@ -70,26 +70,38 @@ class EC2Connector(BaseConnector):
         self.ec2_client = self.session.client('ec2')
 
     def start_instances(self, instance_ids, **query):
-        _LOGGER.debug(f'[EC2Connector] Start instances, instance_ids : {instance_ids}')
-        response = self.ec2_client.start_instances(InstanceIds=instance_ids, **query)
-        _LOGGER.info(f'[EC2Connector] Start instances : {response}')
-        return response
+        try:
+            response = self.ec2_client.start_instances(InstanceIds=instance_ids, **query)
+            _LOGGER.info(f'[EC2Connector] Start instances : {response}')
+            return response
+        except Exception as e:
+            _LOGGER.error(f'[EC2Connector] start_instances error: {e}')
 
     def stop_instances(self, instance_ids, **query):
-        _LOGGER.debug(f'[EC2Connector] Stop instances, instance_ids : {instance_ids}')
-        response = self.ec2_client.stop_instances(InstanceIds=instance_ids, Force=True, **query)
-        _LOGGER.info(f'[EC2Connector] Stop instances : {response}')
-        return response
+        try:
+            response = self.ec2_client.stop_instances(InstanceIds=instance_ids, Force=True, **query)
+            _LOGGER.info(f'[EC2Connector] Stop instances : {response}')
+            return response
+        except Exception as e:
+            _LOGGER.error(f'[EC2Connector] stop_instances error: {e}')
+
+    def get_ec2_instance_status(self, filters, **query):
+        try:
+            response = self.ec2_client.describe_instance_status(Filters=filters)
+            _LOGGER.info(f'[EC2Connector] Instance statuses : {response}')
+            return response
+        except Exception as e:
+            _LOGGER.error(f'[EC2Connector] get_ec2_instance_status error: {e}')
 
     def get_ec2_instance_list(self, instance_ids) -> list:
-        instances = self.ec2_client.describe_instances(InstanceIds=instance_ids)
+        try:
+            instances = self.ec2_client.describe_instances(InstanceIds=instance_ids)
+            reservation_list = instances['Reservations']
+            instance_list = []
 
-        reservation_list = instances['Reservations']
+            for reservation in reservation_list:
+                instance_list = instance_list + reservation['Instances']
 
-        instance_list = []
-
-        for reservation in reservation_list:
-            instance_list = instance_list + reservation['Instances']
-
-        return instance_list
-      
+            return instance_list
+        except Exception as e:
+            _LOGGER.error(f'[EC2Connector] get_ec2_instance_list error: {e}')

@@ -18,4 +18,11 @@ redis
 langcodes
 ipaddress
 python-consul
+botocore
 boto3
+
+# Spaceone Packages
+spaceone-core
+spaceone-api
+spaceone-tester
+schematics

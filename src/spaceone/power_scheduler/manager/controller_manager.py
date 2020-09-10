@@ -20,10 +20,12 @@ class ControllerManager(BaseManager):
     def __init__(self, transaction):
         super().__init__(transaction)
         # Server
-        self._instanceIds = []
+        #self._instanceIds = []
+        #self._retry_instanceIds = []
 
         # AutoScalingGroup
-        self._autoScalingGroups = []
+        #self._autoScalingGroups = []
+        #self._retry_autoScalingGroups = []
         self._asg_desired_capacity = {}
         self._asg_min_size = {}
 
@@ -49,14 +51,26 @@ class ControllerManager(BaseManager):
         if 'region_name' in secret_data:
             region_name = secret_data['region_name']
 
-        self._set_resources_by_resource_type(resource_list)
         result_list = []
+        instanceIds = []
+        asgNames = []
+        for r in resource_list:
+            _LOGGER.debug(f'[start] resource: {r}')
+            if r['resource_type'] == RESOURCE_TYPE_SERVER:
+                instanceId = r['resource']['id']
+                instanceIds.append(instanceId)
+            if r['resource_type'] == RESOURCE_TYPE_ASG:
+                asg_name = r['resource']['id']
+                if 'desired_capacity' in r['resource'] and 'min_size' in r['resource']:
+                    self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
+                    self._asg_min_size[asg_name] = r['resource']['min_size']
+                asgNames.append(asg_name)
 
-        if len(self._instanceIds) > 0:
+        if len(instanceIds) > 0:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instances from requested input params
-            instances = ec2_connector.get_ec2_instance_list(self._get_resources(RESOURCE_TYPE_SERVER))
+            instances = ec2_connector.get_ec2_instance_list(instanceIds)
 
             # Step 2 : Filtered resources by status
             stopped_instances = self._get_ec2_instance_list_by_status(instances, 'stopped')
@@ -66,11 +80,11 @@ class ControllerManager(BaseManager):
             ec2_result = ec2_connector.start_instances(stopped_instances_ids)
             result_list.append(ec2_result)
 
-        if len(self._autoScalingGroups) > 0:
+        if len(asgNames) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
             # Step 1 : Get ASGs from requested input params
-            autoScalingGroups = auto_scaling_connector.get_asg_list(self._get_resources(RESOURCE_TYPE_ASG))
+            autoScalingGroups = auto_scaling_connector.get_asg_list(asgNames)
 
             # Step 2 : Filtered resources by status
             stopped_ASGs = self._get_asg_list_by_status(autoScalingGroups, 'stopped')
@@ -91,14 +105,26 @@ class ControllerManager(BaseManager):
         if 'region_name' in secret_data:
             region_name = secret_data['region_name']
 
-        self._set_resources_by_resource_type(resource_list)
         result_list = []
+        instanceIds = []
+        asgNames = []
+        for r in resource_list:
+            _LOGGER.debug(f'[start] resource: {r}')
+            if r['resource_type'] == RESOURCE_TYPE_SERVER:
+                instanceId = r['resource']['id']
+                instanceIds.append(instanceId)
+            if r['resource_type'] == RESOURCE_TYPE_ASG:
+                asg_name = r['resource']['id']
+                if 'desired_capacity' in r['resource'] and 'min_size' in r['resource']:
+                    self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
+                    self._asg_min_size[asg_name] = r['resource']['min_size']
+                asgNames.append(asg_name)
 
-        if len(self._instanceIds) > 0:
+        if len(instanceIds) > 0:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instances from requested input params
-            instances = ec2_connector.get_ec2_instance_list(self._get_resources(RESOURCE_TYPE_SERVER))
+            instances = ec2_connector.get_ec2_instance_list(instanceIds)
 
             # Step 2 : Filtered resources by status
             running_instances = self._get_ec2_instance_list_by_status(instances, 'running')
@@ -108,11 +134,11 @@ class ControllerManager(BaseManager):
             ec2_result = ec2_connector.stop_instances(running_instances_ids)
             result_list.append(ec2_result)
 
-        if len(self._autoScalingGroups) > 0:
+        if len(asgNames) > 0:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
             # Step 1 : Get ASGs from requested input params
-            autoScalingGroups = auto_scaling_connector.get_asg_list(self._get_resources(RESOURCE_TYPE_ASG))
+            autoScalingGroups = auto_scaling_connector.get_asg_list(asgNames)
 
             # Step 2 : Filtered resources by status
             running_ASGs = self._get_asg_list_by_status(autoScalingGroups, 'running')
@@ -124,32 +150,62 @@ class ControllerManager(BaseManager):
 
         return result_list
 
-    def _set_resources_by_resource_type(self, resource_list):
+    def getRetryResourceStatus(self, resource_param):
+        """ Check connection
+        """
+        secret_data = resource_param['secret_data']
+        resource_list = resource_param['target_resources']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+
+        result_list = []
+        instanceIds = []
+        asgNames = []
         for r in resource_list:
-            _LOGGER.debug(f'[_set_resources_by_resource_type] resource: {r}')
+            _LOGGER.debug(f'[getRetryResourceStatus] resource: {r}')
             if r['resource_type'] == RESOURCE_TYPE_SERVER:
-                instanceId = r['resource']['id']
-                self._instanceIds.append(instanceId)
-                _LOGGER.debug(f'[_set_resources_by_resource_type] instanceId: {instanceId}')
+                instanceId = r['resource_id']
+                instanceIds.append(instanceId)
             if r['resource_type'] == RESOURCE_TYPE_ASG:
-                asg_name = r['resource']['id']
-                if 'desired_capacity' in r['resource'] and 'min_size' in r['resource']:
-                    self._asg_desired_capacity[asg_name] = r['resource']['desired_capacity']
-                    self._asg_min_size[asg_name] = r['resource']['min_size']
-                self._autoScalingGroups.append(asg_name)
-                _LOGGER.debug(f'[_set_resources_by_resource_type] asg_name: {asg_name}')
+                asg_name = r['resource_id']
+                asgNames.append(asg_name)
 
-    def _get_resources(self, resource_type):
-        # TODO: Try to add other resources by resource_type
-        if resource_type == RESOURCE_TYPE_SERVER:
-            _LOGGER.debug(f'[_get_resources] instanceId: {self._instanceIds}')
-            return self._instanceIds
+        if len(instanceIds) > 0:
+            ec2_connector = self.locator.get_connector('EC2Connector')
+            ec2_connector.set_client(secret_data, region_name)
+            # Stop instances which is failed with instance-status.reachability and system-status.reachability
+            self._stop_failed_instances(ec2_connector, instanceIds)
 
-        if resource_type == RESOURCE_TYPE_ASG:
-            _LOGGER.debug(f'[_get_resources] ASGs: {self._autoScalingGroups}')
-            return self._autoScalingGroups
+            # Get instances from requested input params
+            instances = ec2_connector.get_ec2_instance_list(instanceIds)
 
-        return None
+            for inst in instances:
+                inst_status = self._get_ec2_instance_status(inst)
+                inst_status_info = {
+                    "resource_id": inst['InstanceId'],
+                    "resource_status": inst_status,
+                    "resource_type": RESOURCE_TYPE_SERVER
+                }
+                result_list.append(inst_status_info)
+
+        if len(asgNames) > 0:
+            auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
+            auto_scaling_connector.set_client(secret_data, region_name)
+            # Get ASGs from requested input params
+            autoScalingGroups = auto_scaling_connector.get_asg_list(asgNames)
+
+            for asg in autoScalingGroups:
+                asg_status = self._get_asg_status(asg)
+                asg_status_info = {
+                    "resource_id": asg['AutoScalingGroupName'],
+                    "resource_status": asg_status,
+                    "resource_type": RESOURCE_TYPE_ASG
+                }
+                result_list.append(asg_status_info)
+
+        _LOGGER.debug(f'[getRetryResourceStatus] result_list: {result_list}')
+        return result_list
 
     def _get_desired_capacity(self):
         return self._asg_desired_capacity
@@ -209,3 +265,44 @@ class ControllerManager(BaseManager):
             ec2_instance_ids.append(ec2_instance['InstanceId'])
 
         return ec2_instance_ids
+
+    def _stop_failed_instances(self, ec2_connector, total_ids):
+        instance_status_filter = [
+            {
+                'Name': 'instance-status.reachability',
+                'Values': ['failed']
+            }
+        ]
+        instance_status = ec2_connector.get_ec2_instance_status(instance_status_filter)
+
+        system_status_filter = [
+            {
+                'Name': 'system-status.reachability',
+                'Values': ['failed']
+            }
+        ]
+        system_status = ec2_connector.get_ec2_instance_status(system_status_filter)
+
+        status_list = instance_status['InstanceStatuses'] + system_status['InstanceStatuses']
+
+        instance_id_list = []
+        for status in status_list:
+            instance_id = status['InstanceId']
+            if instance_id not in instance_id_list:
+                instance_id_list.append(instance_id)
+
+        target_ids = self._extract_target_instance_ids(instance_id_list, total_ids)
+
+        if len(target_ids) > 0:
+            try:
+                _LOGGER.info(f'[EC2Connector] Failed targeted instance ids : {target_ids}')
+                ec2_connector.stop_instances(target_ids)
+            except Exception as e:
+                LOGGER.error(f'[getRetryResourceStatus] error: {e}')
+
+    def _extract_target_instance_ids(self, candidate_ids, total_ids) -> list:
+        target_ids = []
+        for candidate_id in candidate_ids:
+            if candidate_id in total_ids:
+                target_ids.append(candidate_id)
+        return target_ids
