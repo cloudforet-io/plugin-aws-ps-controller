@@ -45,6 +45,7 @@ class EC2Connector(BaseConnector):
             'aws_secret_access_key': secret_data['aws_secret_access_key'],
             'region_name': region_name
         }
+        _LOGGER.debug(f'[EC2Connector] get_session params : {params}')
 
         session = Session(**params)
 
@@ -69,39 +70,26 @@ class EC2Connector(BaseConnector):
         self.session = self.get_session(secret_data, region_name)
         self.ec2_client = self.session.client('ec2')
 
-    def start_instances(self, instance_ids, **query):
+    def start_instances(self, instance_id, **query):
         try:
-            response = self.ec2_client.start_instances(InstanceIds=instance_ids, **query)
+            response = self.ec2_client.start_instances(InstanceIds=[instance_id], **query)
             _LOGGER.info(f'[EC2Connector] Start instances : {response}')
             return response
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] start_instances error: {e}')
 
-    def stop_instances(self, instance_ids, **query):
+    def stop_instances(self, instance_id, **query):
         try:
-            response = self.ec2_client.stop_instances(InstanceIds=instance_ids, Force=True, **query)
+            response = self.ec2_client.stop_instances(InstanceIds=[instance_id], Force=True, **query)
             _LOGGER.info(f'[EC2Connector] Stop instances : {response}')
             return response
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] stop_instances error: {e}')
 
-    def get_ec2_instance_status(self, filters, **query):
+    def get_ec2_instance(self, instance_id):
         try:
-            response = self.ec2_client.describe_instance_status(Filters=filters)
-            _LOGGER.info(f'[EC2Connector] Instance statuses : {response}')
-            return response
+            response = self.ec2_client.describe_instances(InstanceIds=[instance_id])
+            _LOGGER.debug(f'[EC2Connector] get_ec2_instance response : {response}')
+            return response['Reservations'][0]['Instances'][0]
         except Exception as e:
-            _LOGGER.error(f'[EC2Connector] get_ec2_instance_status error: {e}')
-
-    def get_ec2_instance_list(self, instance_ids) -> list:
-        try:
-            instances = self.ec2_client.describe_instances(InstanceIds=instance_ids)
-            reservation_list = instances['Reservations']
-            instance_list = []
-
-            for reservation in reservation_list:
-                instance_list = instance_list + reservation['Instances']
-
-            return instance_list
-        except Exception as e:
-            _LOGGER.error(f'[EC2Connector] get_ec2_instance_list error: {e}')
+            _LOGGER.error(f'[EC2Connector] get_ec2_instance error: {e}')

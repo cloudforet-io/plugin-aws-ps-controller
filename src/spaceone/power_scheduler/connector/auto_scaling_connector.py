@@ -49,58 +49,42 @@ class AutoScalingConnector(BaseConnector):
         self.session = self.get_session(secret_data, region_name)
         self.asg_client = self.session.client('autoscaling')
 
-    def start_auto_scaling(self, asg_list, min_size, desired_capacity, **query):
-        return self.set_asg_desired_capacity_with_min_size(asg_list, min_size, desired_capacity)
+    def start_auto_scaling(self, asg_name, min_size, desired_capacity, **query):
+        return self.set_asg_desired_capacity_with_min_size(asg_name, min_size, desired_capacity)
 
-    def stop_auto_scaling(self, asg_list, **query):
-        desired_capacity = {}
-        min_size = {}
-        for asg_name in asg_list:
-            # initialize dictionaries with zero, {'A': 0, 'B': 0}
-            desired_capacity[asg_name] = 0
-            min_size[asg_name] = 0
+    def stop_auto_scaling(self, asg_name, **query):
+        return self.set_asg_desired_capacity_with_min_size(asg_name, 0, 0)
 
-        return self.set_asg_desired_capacity_with_min_size(asg_list, min_size, desired_capacity)
+    def set_asg_desired_capacity_with_min_size(self, asg_name, min_size, desired_capacity):
+        try:
+            res = self.asg_client.update_auto_scaling_group(
+                AutoScalingGroupName=asg_name,
+                MinSize=int(min_size),
+                DesiredCapacity=int(desired_capacity),
+            )
+            print('Set asg_desired_capacity :' + str(asg_name) + ', capacity: ' + str(desired_capacity))
+        except botocore.exceptions.ClientError as e:
+            print (e)
 
-    def set_asg_desired_capacity_with_min_size(self, asg_list, min_size, desired_capacity):
-        response_list = []
+            e_arr = str(e).split(':')[1].split(',')
 
-        for asg_name in asg_list:
-            if asg_name in min_size and asg_name in desired_capacity:
-                try:
-                    res = self.asg_client.update_auto_scaling_group(
-                        AutoScalingGroupName=asg_name,
-                        MinSize=int(min_size[asg_name]),
-                        DesiredCapacity=int(desired_capacity[asg_name]),
-                    )
-                    print('Set asg_desired_capacity :' + str(asg_name) + ', capacity: ' + str(desired_capacity[asg_name]))
-                except botocore.exceptions.ClientError as e:
-                    print (e)
+            # An error occurred (ValidationError) when calling the UpdateAutoScalingGroup operation: Max bound, 3, must be greater than or equal to min bound, 5
+            if ' Max bound' == e_arr[0] and ' must be greater than or equal to min bound' == e_arr[2]:
+                max_capacity = int(e_arr[1].strip())
 
-                    e_arr = str(e).split(':')[1].split(',')
-                    
-                    # An error occurred (ValidationError) when calling the UpdateAutoScalingGroup operation: Max bound, 3, must be greater than or equal to min bound, 5
-                    if ' Max bound' == e_arr[0] and ' must be greater than or equal to min bound' == e_arr[2]:
-                        max_capacity = int(e_arr[1].strip())
+                res = self.asg_client.update_auto_scaling_group(
+                    AutoScalingGroupName=asg_name,
+                    MinSize=max_capacity,
+                    DesiredCapacity=max_capacity,
+                )
+                print('Set asg_desired_capacity(max capacity may be changed by user) :' + str(asg_name) + ', capacity: ' + e_arr[1])
 
-                        res = self.asg_client.update_auto_scaling_group(
-                            AutoScalingGroupName=asg_name,
-                            MinSize=max_capacity,
-                            DesiredCapacity=max_capacity,
-                        )
-                        print('Set asg_desired_capacity(max capacity may be changed by user) :' + str(asg_name) + ', capacity: ' + e_arr[1])
-                response_list.append(res)
+        return res
 
-        return response_list
-
-    def get_asg_list(self, asg_names) -> list:
-        asg_list = []
-        for asg_name in asg_names:
-            response = self.asg_client.describe_auto_scaling_groups(
+    def get_asg(self, asg_name):
+        response = self.asg_client.describe_auto_scaling_groups(
                 AutoScalingGroupNames=[
                     asg_name,
                 ],
             )
-            asg_list.append(response['AutoScalingGroups'][0])
-
-        return asg_list
+        return response['AutoScalingGroups'][0]
