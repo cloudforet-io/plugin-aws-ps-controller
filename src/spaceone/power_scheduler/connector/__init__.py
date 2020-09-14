@@ -1,2 +1,3 @@
 from spaceone.power_scheduler.connector.ec2_connector import EC2Connector
 from spaceone.power_scheduler.connector.auto_scaling_connector import AutoScalingConnector
+from spaceone.power_scheduler.connector.rds_connector import RDSConnector
