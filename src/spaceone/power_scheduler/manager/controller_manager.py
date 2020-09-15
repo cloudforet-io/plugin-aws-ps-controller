@@ -50,10 +50,38 @@ class ControllerManager(BaseManager):
             autoScalingGroup = auto_scaling_connector.get_asg(resource_id)
 
             # Step 2 : Start ASG by status
-            asg_status = self._get_asg_status(asg)
+            asg_status = self._get_asg_status(autoScalingGroup)
             if asg_status == 'stopped':
+                if 'min_size' not in resource_data or 'desired_capacity' not in resource_data:
+                    raise AttributeError('There is no desired_capacity or min_size in resource_data')
                 res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['min_size'], resource_data['desired_capacity'])
                 _LOGGER.debug(f'[start] autoScalingGroup res: {res}')
+        if resource_type == RESOURCE_TYPE_RDS_DB:
+            rds_connector = self.locator.get_connector('RDSConnector')
+            rds_connector.set_client(secret_data, region_name)
+
+            if 'service_type' not in resource_data:
+                raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
+
+            service_type = resource_data['service_type']
+            if service_type == 'instance':
+                # Step 1 : Get RDS instance from requested input params
+                rds_instance = rds_connector.get_rds_instance(resource_id)
+
+                # Step 2 : Start RDS instance by status
+                rds_instance_status = rds_instance['DBInstanceStatus']
+                if rds_instance_status == 'stopped':
+                    res = rds_connector.start_rds_instance(resource_id)
+                    _LOGGER.debug(f'[start] RDS instance res: {res}')
+            if service_type == 'cluster':
+                # Step 1 : Get RDS cluster from requested input params
+                rds_cluster = rds_connector.get_rds_cluster(resource_id)
+
+                # Step 2 : Start RDS cluster by status
+                rds_cluster_status = rds_cluster['Status']
+                if rds_cluster_status == 'stopped':
+                    res = rds_connector.start_rds_cluster(resource_id)
+                    _LOGGER.debug(f'[start] RDS cluster res: {res}')
 
     def stop(self, secret_data, region_name, resource_id, resource_type, resource_data):
         """ Check connection
@@ -81,6 +109,32 @@ class ControllerManager(BaseManager):
             if asg_status == 'running':
                 res = auto_scaling_connector.stop_auto_scaling(resource_id)
                 _LOGGER.debug(f'[stop] autoScalingGroup res: {res}')
+        if resource_type == RESOURCE_TYPE_RDS_DB:
+            rds_connector = self.locator.get_connector('RDSConnector')
+            rds_connector.set_client(secret_data, region_name)
+
+            if 'service_type' not in resource_data:
+                raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
+
+            service_type = resource_data['service_type']
+            if service_type == 'instance':
+                # Step 1 : Get RDS instance from requested input params
+                rds_instance = rds_connector.get_rds_instance(resource_id)
+
+                # Step 2 : Stop RDS instance by status
+                rds_instance_status = rds_instance['DBInstanceStatus']
+                if rds_instance_status == 'available':
+                    res = rds_connector.stop_rds_instance(resource_id)
+                    _LOGGER.debug(f'[stop] RDS instance res: {res}')
+            if service_type == 'cluster':
+                # Step 1 : Get RDS cluster from requested input params
+                rds_cluster = rds_connector.get_rds_cluster(resource_id)
+
+                # Step 2 : Start RDS cluster by status
+                rds_cluster_status = rds_cluster['Status']
+                if rds_cluster_status == 'available':
+                    res = rds_connector.stop_rds_cluster(resource_id)
+                    _LOGGER.debug(f'[stop] RDS cluster res: {res}')
 
     def _get_asg_status(self, asg) -> str:
         inservice_count = 0
