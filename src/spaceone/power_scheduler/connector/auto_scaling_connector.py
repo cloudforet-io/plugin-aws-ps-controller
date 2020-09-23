@@ -82,9 +82,13 @@ class AutoScalingConnector(BaseConnector):
         return res
 
     def get_asg(self, asg_name):
-        response = self.asg_client.describe_auto_scaling_groups(
+        try:
+            response = self.asg_client.describe_auto_scaling_groups(
                 AutoScalingGroupNames=[
                     asg_name,
                 ],
             )
-        return response['AutoScalingGroups'][0]
+            _LOGGER.debug(f'[AutoScalingConnector] get_asg response : {response}')
+            return response['AutoScalingGroups'][0]
+        except Exception as e:
+            _LOGGER.error(f'[AutoScalingConnector] get_asg error: {e}')
