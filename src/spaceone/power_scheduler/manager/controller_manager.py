@@ -60,10 +60,10 @@ class ControllerManager(BaseManager):
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
 
-            if 'service_type' not in resource_data:
-                raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
+            #if 'service_type' not in resource_data:
+            #    raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
 
-            service_type = resource_data['service_type']
+            service_type = resource_data['role']
             if service_type == 'instance':
                 # Step 1 : Get RDS instance from requested input params
                 rds_instance = rds_connector.get_rds_instance(resource_id)
@@ -113,10 +113,10 @@ class ControllerManager(BaseManager):
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
 
-            if 'service_type' not in resource_data:
-                raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
+            #if 'service_type' not in resource_data:
+            #    raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
 
-            service_type = resource_data['service_type']
+            service_type = resource_data['role']
             if service_type == 'instance':
                 # Step 1 : Get RDS instance from requested input params
                 rds_instance = rds_connector.get_rds_instance(resource_id)
