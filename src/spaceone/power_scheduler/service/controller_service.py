@@ -6,7 +6,7 @@ from spaceone.core.service import *
 from spaceone.power_scheduler.manager.controller_manager import ControllerManager
 
 _LOGGER = logging.getLogger(__name__)
-SUPPORTED_RESOURCE_TYPE = ['power_scheduler.Server']
+SUPPORTED_RESOURCE_TYPE = ['inventory.CloudService', 'inventory.Server']
 DEFAULT_REGION = 'us-east-1'
 NUMBER_OF_CONCURRENT = 20
 FILTER_FORMAT = []
