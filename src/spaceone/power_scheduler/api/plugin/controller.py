@@ -38,3 +38,10 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
             controller_svc.stop(params)
             return self.locator.get_info('EmptyInfo')
+
+    def reboot(self, request, context):
+        params, metadata = self.parse_request(request, context)
+
+        with self.locator.get_service('ControllerService', metadata) as controller_svc:
+            controller_svc.reboot(params)
+            return self.locator.get_info('EmptyInfo')

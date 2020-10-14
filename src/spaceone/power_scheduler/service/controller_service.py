@@ -120,3 +120,33 @@ class ControllerService(BaseService):
         self.controller_manager.stop(secret_data, region_name, resource_id, resource_type, resource_data)
 
         return {}
+
+    @transaction
+    @check_required(['options','secret_data','resource_id','resource_type'])
+    @append_query_filter(['schema', 'resource_data'])
+    def reboot(self, params):
+        """ verify options capability
+        Args:
+            params
+              - options: list
+              - secret_data: dict
+              - resource_id: string
+              - resource_type: string
+              - resource_data: dict
+              - schema: string
+
+        Returns:
+        """
+        secret_data = params['secret_data']
+        resource_id = params['resource_id']
+        resource_type = params['resource_type']
+        region_name = DEFAULT_REGION
+        if 'region_name' in secret_data:
+            region_name = secret_data['region_name']
+        resource_data = None
+        if 'resource_data' in params:
+            resource_data = params['resource_data']
+
+        self.controller_manager.reboot(secret_data, region_name, resource_id, resource_type, resource_data)
+
+        return {}
