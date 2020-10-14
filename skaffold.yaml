@@ -2,9 +2,9 @@ apiVersion: skaffold/v2beta2
 kind: Config
 build:
   artifacts:
-    - image: plugin-aws-power-scheduler-controller
+    - image: 110365492710.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone/aws-power-scheduler-controller
       context: ./
 deploy:
   kubectl:
     manifests:
-      - ./deployment.yaml
+      - ./deployments.yaml
