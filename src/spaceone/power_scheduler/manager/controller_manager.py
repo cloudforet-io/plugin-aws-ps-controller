@@ -29,8 +29,6 @@ class ControllerManager(BaseManager):
         return r
 
     def start(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        """ Check connection
-        """
         if resource_type == RESOURCE_TYPE_SERVER:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
@@ -84,8 +82,6 @@ class ControllerManager(BaseManager):
                     _LOGGER.debug(f'[start] RDS cluster res: {res}')
 
     def stop(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        """ Check connection
-        """
         if resource_type == RESOURCE_TYPE_SERVER:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
@@ -135,6 +131,15 @@ class ControllerManager(BaseManager):
                 if rds_cluster_status == 'available':
                     res = rds_connector.stop_rds_cluster(resource_id)
                     _LOGGER.debug(f'[stop] RDS cluster res: {res}')
+
+    def reboot(self, secret_data, region_name, resource_id, resource_type, resource_data):
+        # reboot case is only occured on server-type resource
+        if resource_type == RESOURCE_TYPE_SERVER:
+            ec2_connector = self.locator.get_connector('EC2Connector')
+            ec2_connector.set_client(secret_data, region_name)
+
+            res = ec2_connector.reboot_instance(resource_id)
+            _LOGGER.debug(f'[reboot] instance res: {res}')
 
     def _get_asg_status(self, asg) -> str:
         inservice_count = 0

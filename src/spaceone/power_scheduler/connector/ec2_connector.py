@@ -86,6 +86,14 @@ class EC2Connector(BaseConnector):
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] stop_instances error: {e}')
 
+    def reboot_instance(self, instance_id, **query):
+        try:
+            response = self.ec2_client.reboot_instances(InstanceIds=[instance_id], **query)
+            _LOGGER.info(f'[EC2Connector] Reboot instances : {response}')
+            return response
+        except Exception as e:
+            _LOGGER.error(f'[EC2Connector] Reboot_instances error: {e}')
+
     def get_ec2_instance(self, instance_id):
         try:
             response = self.ec2_client.describe_instances(InstanceIds=[instance_id])
