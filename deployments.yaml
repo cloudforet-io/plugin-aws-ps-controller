@@ -10,8 +10,8 @@ spec:
   selector:
     matchLabels:
       app: aws-power-scheduler-controller
-      domain_id: domain-53c892b3ea78
-      plugin_name: aws-power-scheduler-controller
+      domain_id: domain-b6fdc618c186
+      plugin_name: aws-power-controller
       service_type: power_scheduler.Controller
       supervisor_name: root
       version: '1.0'
@@ -19,8 +19,8 @@ spec:
     metadata:
       labels:
         app: aws-power-scheduler-controller
-        domain_id: domain-53c892b3ea78
-        plugin_name: aws-power-scheduler-controller
+        domain_id: domain-b6fdc618c186
+        plugin_name: aws-power-controller
         service_type: power_scheduler.Controller
         supervisor_name: root
         version: '1.0'
