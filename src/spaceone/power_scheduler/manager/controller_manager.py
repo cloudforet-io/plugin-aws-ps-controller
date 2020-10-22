@@ -9,10 +9,6 @@ from spaceone.core.manager import BaseManager
 
 _LOGGER = logging.getLogger(__name__)
 
-RESOURCE_TYPE_SERVER = 'inventory.Server'
-RESOURCE_TYPE_ASG = 'inventory.CloudService.aws.AutoScaling.AutoScalingGroup'
-RESOURCE_TYPE_RDS_DB = 'inventory.CloudService.aws.RDS.Database'
-
 DEFAULT_REGION = 'us-east-1'
 
 class ControllerManager(BaseManager):
@@ -29,7 +25,7 @@ class ControllerManager(BaseManager):
         return r
 
     def start(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        if resource_type == RESOURCE_TYPE_SERVER:
+        if resource_type == "inventory.Server":
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instance from requested input params
@@ -40,7 +36,7 @@ class ControllerManager(BaseManager):
             if instance_status == 'stopped':
                 res = ec2_connector.start_instances(resource_id)
                 _LOGGER.debug(f'[start] instance res: {res}')
-        if resource_type == RESOURCE_TYPE_ASG:
+        if "AutoScaling" in resource_type:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
 
@@ -54,7 +50,7 @@ class ControllerManager(BaseManager):
                     raise AttributeError('There is no desired_capacity or min_size in resource_data')
                 res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['min_size'], resource_data['desired_capacity'])
                 _LOGGER.debug(f'[start] autoScalingGroup res: {res}')
-        if resource_type == RESOURCE_TYPE_RDS_DB:
+        if "RDS" in resource_type:
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
 
@@ -82,7 +78,7 @@ class ControllerManager(BaseManager):
                     _LOGGER.debug(f'[start] RDS cluster res: {res}')
 
     def stop(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        if resource_type == RESOURCE_TYPE_SERVER:
+        if resource_type == "inventory.Server":
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instance from requested input params
@@ -93,7 +89,7 @@ class ControllerManager(BaseManager):
             if instance_status == 'running':
                 res = ec2_connector.stop_instances(resource_id)
                 _LOGGER.debug(f'[stop] instance res: {res}')
-        if resource_type == RESOURCE_TYPE_ASG:
+        if "AutoScaling" in resource_type:
             auto_scaling_connector = self.locator.get_connector('AutoScalingConnector')
             auto_scaling_connector.set_client(secret_data, region_name)
 
@@ -105,7 +101,7 @@ class ControllerManager(BaseManager):
             if asg_status == 'running':
                 res = auto_scaling_connector.stop_auto_scaling(resource_id)
                 _LOGGER.debug(f'[stop] autoScalingGroup res: {res}')
-        if resource_type == RESOURCE_TYPE_RDS_DB:
+        if "RDS" in resource_type:
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
 
@@ -134,7 +130,7 @@ class ControllerManager(BaseManager):
 
     def reboot(self, secret_data, region_name, resource_id, resource_type, resource_data):
         # reboot case is only occured on server-type resource
-        if resource_type == RESOURCE_TYPE_SERVER:
+        if resource_type == "inventory.Server":
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
 
