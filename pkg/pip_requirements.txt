@@ -23,6 +23,6 @@ boto3
 
 # Spaceone Packages
 spaceone-core
-spaceone-api
+spaceone-api==1.4.2.dev1
 spaceone-tester
 schematics
