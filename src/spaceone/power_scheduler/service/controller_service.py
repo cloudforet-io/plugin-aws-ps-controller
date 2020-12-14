@@ -5,41 +5,24 @@ import re
 
 from spaceone.core.service import *
 from spaceone.power_scheduler.manager.controller_manager import ControllerManager
+from spaceone.power_scheduler.manager.plugin_manager import PluginManager
 
 _LOGGER = logging.getLogger(__name__)
-SUPPORTED_RESOURCE_TYPE = ['inventory.CloudService', 'inventory.Server']
 DEFAULT_REGION = 'us-east-1'
 NUMBER_OF_CONCURRENT = 20
-FILTER_FORMAT = []
 
 @authentication_handler
 class ControllerService(BaseService):
     def __init__(self, metadata):
         super().__init__(metadata)
         self.controller_manager: ControllerManager = self.locator.get_manager('ControllerManager')
+        self.plugin_manager: PluginManager = self.locator.get_manager('PluginManager')
 
     @check_required(['options'])
     def init(self, params):
         """ init plugin by options
         """
-        capability = {
-            'filter_format': FILTER_FORMAT,
-            'supported_resource_type': SUPPORTED_RESOURCE_TYPE
-        }
-        _LOGGER.debug(f'[init] name: {params["options"]}')
-        return {'metadata': capability}
-
-    @transaction
-    @check_required(['options'])
-    def init(self, params):
-        """ init plugin by options
-        """
-        capability = {
-            'filter_format':FILTER_FORMAT,
-            'supported_resource_type' : SUPPORTED_RESOURCE_TYPE
-        }
-        _LOGGER.debug(f'[init_transaction] name: {params["options"]}')
-        return {'metadata': capability}
+        return self.plugin_manager.init_response()
 
     @transaction
     @check_required(['options','secret_data'])
