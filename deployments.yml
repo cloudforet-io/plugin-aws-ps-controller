@@ -3,27 +3,29 @@ kind: Deployment
 metadata:
   name: aws-power-controller
   labels:
-    app: aws-power-controller
+    domain_id: domain-8b5c2f2f9ca1
+    plugin_name: aws-power-controller
+    service_type: power_scheduler.Controller
+    supervisor_name: root
+    version: '441ce36-dirty'
   namespace: spaceone
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: aws-power-controller
-      domain_id: domain-dc2ad7d78a19
+      domain_id: domain-8b5c2f2f9ca1
       plugin_name: aws-power-controller
       service_type: power_scheduler.Controller
       supervisor_name: root
-      version: '1.0'
+      version: '441ce36-dirty'
   template:
     metadata:
       labels:
-        app: aws-power-controller
-        domain_id: domain-dc2ad7d78a19
+        domain_id: domain-8b5c2f2f9ca1
         plugin_name: aws-power-controller
         service_type: power_scheduler.Controller
         supervisor_name: root
-        version: '1.0'
+        version: '441ce36-dirty'
     spec:
       containers:
       - name: aws-power-controller
