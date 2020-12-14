@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: aws-power-scheduler-controller
+  name: aws-power-controller
   labels:
-    app: aws-power-scheduler-controller
+    app: aws-power-controller
   namespace: spaceone
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: aws-power-scheduler-controller
-      domain_id: domain-b6fdc618c186
+      app: aws-power-controller
+      domain_id: domain-dc2ad7d78a19
       plugin_name: aws-power-controller
       service_type: power_scheduler.Controller
       supervisor_name: root
@@ -18,16 +18,16 @@ spec:
   template:
     metadata:
       labels:
-        app: aws-power-scheduler-controller
-        domain_id: domain-b6fdc618c186
+        app: aws-power-controller
+        domain_id: domain-dc2ad7d78a19
         plugin_name: aws-power-controller
         service_type: power_scheduler.Controller
         supervisor_name: root
         version: '1.0'
     spec:
       containers:
-      - name: aws-power-scheduler-controller
-        image: 110365492710.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone/aws-power-scheduler-controller:latest
+      - name: aws-power-controller
+        image: 110365492710.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone/aws-power-controller:latest
         ports:
         - containerPort: 50051
           protocol: TCP
