@@ -1,2 +1,2 @@
 from spaceone.power_scheduler.manager.controller_manager import ControllerManager
-from spaceone.power_scheduler.manager.controller_manager import PluginManager
+from spaceone.power_scheduler.manager.plugin_manager import PluginManager
