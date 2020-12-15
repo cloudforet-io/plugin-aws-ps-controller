@@ -8,32 +8,45 @@ _SUPPORTED_RESOURCE_TYPE = [
     'inventory.Server',
     'inventory.CloudService'
 ]
-_SUPPORTED_STAT = [
-    'AVERAGE',
-    'MAX',
-    'MIN',
-    'SUM'
-]
 
 _REFERENCE_KEYS = [
     {
-      'resource_type': 'inventory.Server',
-      'reference_key': 'data.power-scheduler-controller'
+        'resource_type': 'inventory.Server',
+        'required_keys': [
+            'collection_info.secrets',
+            'region_code',
+            'reference.resource_id',
+            'provider'
+        ]
     }, {
-      'resource_type': 'inventory.CloudService',
-      'reference_key': 'data.power-scheduler-controller'
+        'resource_type': 'inventory.CloudService',
+        'required_keys': [
+            'region_code',
+            'collection_info.secrets',
+            'reference.resource_id',
+            'cloud_service_type',
+            'cloud_service_group',
+            'provider',
+            'cloud_service_id',
+            'data.auto_scaling_group_name',
+            'data.db_identifier',
+            'data.role',
+            'data.desired_capacity',
+            'data.min_size',
+            'data.instances',
+            'data.power_scheduler.original_desired_capacity',
+            'data.power_scheduler.original_min_size'
+        ]
     }
 ]
 
-
 class ReferenceKeyModel(Model):
     resource_type = StringType(required=True, choices=_SUPPORTED_RESOURCE_TYPE)
-    reference_key = StringType(required=True)
+    required_keys = StringType(required=True)
 
 
 class PluginMetadata(Model):
     supported_resource_type = ListType(StringType, default=_SUPPORTED_RESOURCE_TYPE)
-    supported_stat = ListType(StringType, default=_SUPPORTED_STAT)
     reference_keys = ListType(ModelType(ReferenceKeyModel), default=_REFERENCE_KEYS)
 
 
