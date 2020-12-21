@@ -42,7 +42,7 @@ _REFERENCE_KEYS = [
 
 class ReferenceKeyModel(Model):
     resource_type = StringType(required=True, choices=_SUPPORTED_RESOURCE_TYPE)
-    required_keys = StringType(required=True)
+    required_keys = ListType(StringType)
 
 
 class PluginMetadata(Model):
