@@ -5,7 +5,7 @@ build:
     envTemplate:
       template: "{{.SKAFFOLD_TAG}}"
   artifacts:
-    - image: 110365492710.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone/aws-power-controller
+    - image: 728099990403.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone-dev/aws-power-controller
       context: ./
 deploy:
   kubectl:
