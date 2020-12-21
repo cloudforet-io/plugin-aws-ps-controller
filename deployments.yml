@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: aws-power-controller
   labels:
-    domain_id: domain-d86a47850bd3
+    domain_id: domain-85bf91df88fa
     plugin_name: aws-power-controller
     service_type: power_scheduler.Controller
     supervisor_name: root
@@ -13,7 +13,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      domain_id: domain-d86a47850bd3
+      domain_id: domain-85bf91df88fa
       plugin_name: aws-power-controller
       service_type: power_scheduler.Controller
       supervisor_name: root
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       labels:
-        domain_id: domain-d86a47850bd3
+        domain_id: domain-85bf91df88fa
         plugin_name: aws-power-controller
         service_type: power_scheduler.Controller
         supervisor_name: root
@@ -29,8 +29,10 @@ spec:
     spec:
       containers:
       - name: aws-power-controller
-        image: 110365492710.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone/aws-power-controller:latest
+        image: 728099990403.dkr.ecr.ap-northeast-2.amazonaws.com/spaceone-dev/aws-power-controller:latest
         ports:
         - containerPort: 50051
           protocol: TCP
         imagePullPolicy: Always
+      nodeSelector:
+        node.kubernetes.io/lifecycle: spot
