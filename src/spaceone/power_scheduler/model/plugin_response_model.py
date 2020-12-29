@@ -16,7 +16,8 @@ _REFERENCE_KEYS = [
             'collection_info.secrets',
             'region_code',
             'reference.resource_id',
-            'provider'
+            'provider',
+            'data.power_state'
         ]
     }, {
         'resource_type': 'inventory.CloudService',

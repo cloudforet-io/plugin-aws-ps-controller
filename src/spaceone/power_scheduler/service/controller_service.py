@@ -46,15 +46,13 @@ class ControllerService(BaseService):
         return {}
 
     @transaction
-    @check_required(['options','secret_data','resource_id','resource_type'])
-    @append_query_filter(['schema', 'resource_data'])
+    @check_required(['resource_type','secret_data','resource_data'])
+    @append_query_filter(['schema'])
     def start(self, params):
         """ verify options capability
         Args:
             params
-              - options: list
               - secret_data: dict
-              - resource_id: string
               - resource_type: string
               - resource_data: dict
               - schema: string
@@ -66,11 +64,9 @@ class ControllerService(BaseService):
         region_name = DEFAULT_REGION
         if 'region_name' in secret_data:
             region_name = secret_data['region_name']
-        resource_data = None
-        if 'resource_data' in params:
-            resource_data = params['resource_data']
+        resource_data = params['resource_data']
 
-        resource_id = self._parse_resource_id_by_resource_type(params['resource_id'], resource_type, resource_data)
+        resource_id = self._parse_resource_id_by_resource_type(resource_data['reference']['resource_id'], resource_type, resource_data)
         _LOGGER.debug(f'[start] resource_id: {resource_id}')
 
         self.controller_manager.start(secret_data, region_name, resource_id, resource_type, resource_data)
@@ -78,15 +74,13 @@ class ControllerService(BaseService):
         return {}
 
     @transaction
-    @check_required(['options','secret_data','resource_id','resource_type'])
-    @append_query_filter(['schema', 'resource_data'])
+    @check_required(['resource_type','secret_data','resource_data'])
+    @append_query_filter(['schema'])
     def stop(self, params):
         """ verify options capability
         Args:
             params
-              - options: list
               - secret_data: dict
-              - resource_id: string
               - resource_type: string
               - resource_data: dict
               - schema: string
@@ -98,11 +92,9 @@ class ControllerService(BaseService):
         region_name = DEFAULT_REGION
         if 'region_name' in secret_data:
             region_name = secret_data['region_name']
-        resource_data = None
-        if 'resource_data' in params:
-            resource_data = params['resource_data']
+        resource_data = params['resource_data']
 
-        resource_id = self._parse_resource_id_by_resource_type(params['resource_id'], resource_type, resource_data)
+        resource_id = self._parse_resource_id_by_resource_type(resource_data['reference']['resource_id'], resource_type, resource_data)
         _LOGGER.debug(f'[stop] params: {params}')
 
         self.controller_manager.stop(secret_data, region_name, resource_id, resource_type, resource_data)
@@ -110,15 +102,13 @@ class ControllerService(BaseService):
         return {}
 
     @transaction
-    @check_required(['options','secret_data','resource_id','resource_type'])
-    @append_query_filter(['schema', 'resource_data'])
+    @check_required(['resource_type','secret_data','resource_data'])
+    @append_query_filter(['schema'])
     def reboot(self, params):
         """ verify options capability
         Args:
             params
-              - options: list
               - secret_data: dict
-              - resource_id: string
               - resource_type: string
               - resource_data: dict
               - schema: string
@@ -126,14 +116,12 @@ class ControllerService(BaseService):
         Returns:
         """
         secret_data = params['secret_data']
-        resource_id = params['resource_id']
         resource_type = params['resource_type']
         region_name = DEFAULT_REGION
         if 'region_name' in secret_data:
             region_name = secret_data['region_name']
-        resource_data = None
-        if 'resource_data' in params:
-            resource_data = params['resource_data']
+        resource_data = params['resource_data']
+        resource_id = resource_data['reference']['resource_id']
 
         self.controller_manager.reboot(secret_data, region_name, resource_id, resource_type, resource_data)
 
@@ -161,7 +149,7 @@ class ControllerService(BaseService):
                 if "AutoScaling" in resource_type:
                     parsed_resource_id = (re.findall('autoScalingGroupName/(.+)', resource_id))[0]
                 elif "RDS" in resource_type:
-                    service_type = resource_data['role']
+                    service_type = resource_data['data']['role']
                     if service_type == 'cluster':
                         parsed_resource_id = (re.findall('cluster:(.+)', resource_id))[0]
                     elif service_type == 'instance':
