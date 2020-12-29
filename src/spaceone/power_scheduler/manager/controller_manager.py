@@ -25,7 +25,7 @@ class ControllerManager(BaseManager):
         return r
 
     def start(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        if resource_type == "inventory.Server":
+        if "inventory.Server" in resource_type:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instance from requested input params
@@ -57,7 +57,7 @@ class ControllerManager(BaseManager):
             #if 'service_type' not in resource_data:
             #    raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
 
-            service_type = resource_data['role']
+            service_type = resource_data['data']['role']
             if service_type == 'instance':
                 # Step 1 : Get RDS instance from requested input params
                 rds_instance = rds_connector.get_rds_instance(resource_id)
@@ -78,7 +78,7 @@ class ControllerManager(BaseManager):
                     _LOGGER.debug(f'[start] RDS cluster res: {res}')
 
     def stop(self, secret_data, region_name, resource_id, resource_type, resource_data):
-        if resource_type == "inventory.Server":
+        if "inventory.Server" in resource_type:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
             # Step 1 : Get instance from requested input params
@@ -108,7 +108,7 @@ class ControllerManager(BaseManager):
             #if 'service_type' not in resource_data:
             #    raise AttributeError('There is no service_type(instance/cluster) for RDS in resource_data')
 
-            service_type = resource_data['role']
+            service_type = resource_data['data']['role']
             if service_type == 'instance':
                 # Step 1 : Get RDS instance from requested input params
                 rds_instance = rds_connector.get_rds_instance(resource_id)
@@ -130,7 +130,7 @@ class ControllerManager(BaseManager):
 
     def reboot(self, secret_data, region_name, resource_id, resource_type, resource_data):
         # reboot case is only occured on server-type resource
-        if resource_type == "inventory.Server":
+        if "inventory.Server" in resource_type:
             ec2_connector = self.locator.get_connector('EC2Connector')
             ec2_connector.set_client(secret_data, region_name)
 
