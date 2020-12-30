@@ -17,6 +17,7 @@ _REFERENCE_KEYS = [
             'region_code',
             'reference.resource_id',
             'provider',
+            'cloud_service_type',
             'data.power_state'
         ]
     }, {
