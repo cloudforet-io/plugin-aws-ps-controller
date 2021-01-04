@@ -1,27 +1,15 @@
-# Core Packages
-grpcio
-grpcio-reflection
-grpcio-health-checking
-google-api-core
-PyYAML
-unittest-xml-reporting==3.0.2
-pycryptodome==3.8.2
-schedule
-cachetools
-jwcrypto==0.7
-python-jose==3.1.0
-factory-boy
- 
 # Inventory Packages
 mongoengine
 redis
 langcodes
 ipaddress
 python-consul
+
+# Plugin Packages
 botocore
 boto3
 
 # Spaceone Packages
-spaceone-core==1.5.1.2
-spaceone-api==1.5.1
+spaceone-core
+spaceone-api
 schematics
