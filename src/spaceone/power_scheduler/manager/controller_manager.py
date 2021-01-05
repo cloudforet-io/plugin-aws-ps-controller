@@ -46,9 +46,11 @@ class ControllerManager(BaseManager):
             # Step 2 : Start ASG by status
             asg_status = self._get_asg_status(autoScalingGroup)
             if asg_status == 'stopped':
-                if 'min_size' not in resource_data or 'desired_capacity' not in resource_data:
-                    raise AttributeError('There is no desired_capacity or min_size in resource_data')
-                res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['min_size'], resource_data['desired_capacity'])
+                if 'power_scheduler' not in resource_data['data'] or 'original_min_size' not in resource_data['data']['power_scheduler'] or \
+                    'original_desired_capacity' not in resource_data['data']['power_scheduler']:
+                    raise AttributeError('There is no original_min_size or original_desired_capacity in resource_data')
+                res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['data']['power_scheduler']['original_min_size'], \
+                    resource_data['data']['power_scheduler']['original_desired_capacity'])
                 _LOGGER.debug(f'[start] autoScalingGroup res: {res}')
                 update_info = self._get_update_info(resource_data, isStart=True)
                 return update_info
