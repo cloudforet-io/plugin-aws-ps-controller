@@ -23,5 +23,5 @@ boto3
 
 # Spaceone Packages
 spaceone-core==1.5.1.2
-spaceone-api==1.5.1
+#spaceone-api==1.5.1
 schematics

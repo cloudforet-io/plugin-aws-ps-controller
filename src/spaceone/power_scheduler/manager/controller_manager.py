@@ -50,6 +50,8 @@ class ControllerManager(BaseManager):
                     raise AttributeError('There is no desired_capacity or min_size in resource_data')
                 res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['min_size'], resource_data['desired_capacity'])
                 _LOGGER.debug(f'[start] autoScalingGroup res: {res}')
+                update_info = self._get_update_info(resource_data, isStart=True)
+                return update_info
         if cloud_service_type == "Database":
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
@@ -76,6 +78,7 @@ class ControllerManager(BaseManager):
                 if rds_cluster_status == 'stopped':
                     res = rds_connector.start_rds_cluster(resource_id)
                     _LOGGER.debug(f'[start] RDS cluster res: {res}')
+        return {}
 
     def stop(self, secret_data, region_name, resource_id, cloud_service_type, resource_data):
         if cloud_service_type == "Instance":
@@ -101,6 +104,8 @@ class ControllerManager(BaseManager):
             if asg_status == 'running':
                 res = auto_scaling_connector.stop_auto_scaling(resource_id)
                 _LOGGER.debug(f'[stop] autoScalingGroup res: {res}')
+                update_info = self._get_update_info(resource_data, isStart=False)
+                return update_info
         if cloud_service_type == "Database":
             rds_connector = self.locator.get_connector('RDSConnector')
             rds_connector.set_client(secret_data, region_name)
@@ -127,6 +132,7 @@ class ControllerManager(BaseManager):
                 if rds_cluster_status == 'available':
                     res = rds_connector.stop_rds_cluster(resource_id)
                     _LOGGER.debug(f'[stop] RDS cluster res: {res}')
+        return {}
 
     def reboot(self, secret_data, region_name, resource_id, cloud_service_type, resource_data):
         # reboot case is only occured on server-type resource
@@ -152,3 +158,24 @@ class ControllerManager(BaseManager):
             return 'running'
 
         return 'stopped'
+
+    def _get_update_info(self, resource_data, isStart):
+        _LOGGER.debug(f'[_get_update_info] resource_data: {resource_data}')
+        desired_capacity = 0
+        min_size = 0
+        if isStart:
+            desired_capacity = resource_data['data']['power_scheduler']['original_desired_capacity']
+            min_size = resource_data['data']['power_scheduler']['original_min_size']
+        update_info = {
+            'action' : 'update_cloud_service',
+            'data' : {
+                'desired_capacity': desired_capacity,
+                'min_size': min_size,
+                'power_scheduler': {
+                    'original_desired_capacity': resource_data['data']['desired_capacity'],
+                    'original_min_size': resource_data['data']['min_size'],
+                    'original_instance_type': resource_data['data']['instances'][0]['instance_type']
+                }
+            }
+        }
+        return update_info

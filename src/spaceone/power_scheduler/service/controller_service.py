@@ -68,9 +68,9 @@ class ControllerService(BaseService):
         resource_id = self._parse_resource_id_by_cloud_service_type(resource_data['reference']['resource_id'], cloud_service_type, resource_data)
         _LOGGER.debug(f'[start] resource_id: {resource_id}')
 
-        self.controller_manager.start(secret_data, region_name, resource_id, cloud_service_type, resource_data)
+        res = self.controller_manager.start(secret_data, region_name, resource_id, cloud_service_type, resource_data)
 
-        return {}
+        return res
 
     @transaction
     @check_required(['secret_data','resource_data'])
@@ -95,9 +95,9 @@ class ControllerService(BaseService):
         resource_id = self._parse_resource_id_by_cloud_service_type(resource_data['reference']['resource_id'], cloud_service_type, resource_data)
         _LOGGER.debug(f'[stop] params: {params}')
 
-        self.controller_manager.stop(secret_data, region_name, resource_id, cloud_service_type, resource_data)
+        res = self.controller_manager.stop(secret_data, region_name, resource_id, cloud_service_type, resource_data)
 
-        return {}
+        return res
 
     @transaction
     @check_required(['secret_data','resource_data'])

@@ -29,15 +29,15 @@ class Controller(BaseAPI, controller_pb2_grpc.ControllerServicer):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            controller_svc.start(params)
-            return self.locator.get_info('EmptyInfo')
+            info = controller_svc.start(params)
+            return self.locator.get_info('UpdateInfo', info)
 
     def stop(self, request, context):
         params, metadata = self.parse_request(request, context)
 
         with self.locator.get_service('ControllerService', metadata) as controller_svc:
-            controller_svc.stop(params)
-            return self.locator.get_info('EmptyInfo')
+            info = controller_svc.stop(params)
+            return self.locator.get_info('UpdateInfo', info)
 
     def reboot(self, request, context):
         params, metadata = self.parse_request(request, context)
