@@ -5,6 +5,8 @@ ENV SPACEONE_PORT 50051
 ENV SERVER_TYPE grpc
 ENV PKG_DIR /tmp/pkg
 ENV SRC_DIR /tmp/src
+ENV API_DIR /api
+ENV PYTHONPATH /api
 
 COPY pkg/*.txt ${PKG_DIR}/
 
@@ -14,6 +16,8 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \
 
 RUN pip install --upgrade pip && \
     pip install --upgrade -r ${PKG_DIR}/pip_requirements.txt
+
+COPY api/python ${API_DIR}
 
 ARG CACHEBUST=1
 RUN pip install --upgrade --pre spaceone-core spaceone-api
