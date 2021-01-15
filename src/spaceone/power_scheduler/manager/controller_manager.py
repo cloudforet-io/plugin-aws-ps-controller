@@ -52,7 +52,7 @@ class ControllerManager(BaseManager):
                 res = auto_scaling_connector.start_auto_scaling(resource_id, resource_data['data']['power_scheduler']['original_min_size'], \
                     resource_data['data']['power_scheduler']['original_desired_capacity'])
                 _LOGGER.debug(f'[start] autoScalingGroup res: {res}')
-                update_info = self._get_update_info(resource_data, isStart=True)
+                update_info = self._get_update_info(resource_data, autoScalingGroup, isStart=True)
                 return update_info
         if cloud_service_type == "Database":
             rds_connector = self.locator.get_connector('RDSConnector')
@@ -106,7 +106,7 @@ class ControllerManager(BaseManager):
             if asg_status == 'running':
                 res = auto_scaling_connector.stop_auto_scaling(resource_id)
                 _LOGGER.debug(f'[stop] autoScalingGroup res: {res}')
-                update_info = self._get_update_info(resource_data, isStart=False)
+                update_info = self._get_update_info(resource_data, autoScalingGroup, isStart=False)
                 return update_info
         if cloud_service_type == "Database":
             rds_connector = self.locator.get_connector('RDSConnector')
@@ -161,22 +161,30 @@ class ControllerManager(BaseManager):
 
         return 'stopped'
 
-    def _get_update_info(self, resource_data, isStart):
-        _LOGGER.debug(f'[_get_update_info] resource_data: {resource_data}')
-        desired_capacity = 0
-        min_size = 0
+    def _get_update_info(self, resource_data, asg, isStart):
+        _LOGGER.debug(f'[_get_update_info] autoScalingGroup: {resource_data}, {asg}')
         if isStart:
             desired_capacity = resource_data['data']['power_scheduler']['original_desired_capacity']
             min_size = resource_data['data']['power_scheduler']['original_min_size']
+            original_desired_capacity = resource_data['data']['power_scheduler']['original_desired_capacity']
+            original_min_size = resource_data['data']['power_scheduler']['original_min_size']
+            original_instance_type = resource_data['data']['power_scheduler']['original_instance_type']
+        else:
+            desired_capacity = 0
+            min_size = 0
+            original_desired_capacity = asg['DesiredCapacity']
+            original_min_size = asg['MinSize']
+            original_instance_type = asg['Instances'][0]['InstanceType']
+
         update_info = {
-            'action' : 'update_cloud_service',
-            'data' : {
-                'desired_capacity': desired_capacity,
-                'min_size': min_size,
+            'action': 'update_cloud_service',
+            'data': {
+                'desired_capacity': int(desired_capacity),
+                'min_size': int(min_size),
                 'power_scheduler': {
-                    'original_desired_capacity': resource_data['data']['desired_capacity'],
-                    'original_min_size': resource_data['data']['min_size'],
-                    'original_instance_type': resource_data['data']['instances'][0]['instance_type']
+                    'original_desired_capacity': int(original_desired_capacity),
+                    'original_min_size': int(original_min_size),
+                    'original_instance_type': original_instance_type
                 }
             }
         }
