@@ -5,8 +5,9 @@ from schematics.types.compound import ModelType
 __all__ = ['PluginInitResponse']
 
 _SUPPORTED_RESOURCE_TYPE = [
-    'inventory.Server',
-    'inventory.CloudService'
+    'inventory.Server?provider=aws&cloud_service_group=EC2&cloud_service_type=Instance',
+    'inventory.CloudService?provider=aws&cloud_service_group=RDS&cloud_service_type=Database',
+    'inventory.CloudService?provider=aws&cloud_service_group=EC2&cloud_service_type=AutoScalingGroup'
 ]
 
 _REFERENCE_KEYS = [
