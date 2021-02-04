@@ -14,25 +14,14 @@ _REFERENCE_KEYS = [
     {
         'resource_type': 'inventory.Server',
         'required_keys': [
-            'collection_info.secrets',
-            'region_code',
             'reference.resource_id',
-            'provider',
-            'cloud_service_type',
-            'data.power_state'
+            'cloud_service_type'
         ]
     }, {
         'resource_type': 'inventory.CloudService',
         'required_keys': [
-            'region_code',
-            'collection_info.secrets',
             'reference.resource_id',
             'cloud_service_type',
-            'cloud_service_group',
-            'provider',
-            'cloud_service_id',
-            'data.auto_scaling_group_name',
-            'data.db_identifier',
             'data.role',
             'data.desired_capacity',
             'data.min_size',
