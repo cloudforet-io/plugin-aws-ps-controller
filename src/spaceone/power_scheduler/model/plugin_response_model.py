@@ -12,17 +12,23 @@ _SUPPORTED_RESOURCE_TYPE = [
 
 _REFERENCE_KEYS = [
     {
-        'resource_type': 'inventory.Server',
+        'resource_type': 'inventory.Server?provider=aws&cloud_service_group=EC2&cloud_service_type=Instance',
         'required_keys': [
             'reference.resource_id',
             'cloud_service_type'
         ]
     }, {
-        'resource_type': 'inventory.CloudService',
+        'resource_type': 'inventory.CloudService?provider=aws&cloud_service_group=RDS&cloud_service_type=Database',
         'required_keys': [
             'reference.resource_id',
             'cloud_service_type',
-            'data.role',
+            'data.role'
+        ]
+    }, {
+        'resource_type': 'inventory.CloudService?provider=aws&cloud_service_group=EC2&cloud_service_type=AutoScalingGroup',
+        'required_keys': [
+            'reference.resource_id',
+            'cloud_service_type',
             'data.desired_capacity',
             'data.min_size',
             'data.instances',
