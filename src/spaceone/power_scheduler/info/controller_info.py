@@ -13,8 +13,9 @@ def PluginInfo(result):
     result['metadata'] = change_struct_type(result['metadata'])
     return controller_pb2.PluginInfo(**result)
 
-def UpdateInfo(resource_dict):
-    return controller_pb2.UpdateInfo(**resource_dict)
+def UpdateInfo(result):
+    result['data'] = change_struct_type(result['data'])
+    return controller_pb2.UpdateInfo(**result)
 
 def RetryResourceStatusInfo(resource_dict):
     return controller_pb2.RetryResourceStatusInfo(**resource_dict)
