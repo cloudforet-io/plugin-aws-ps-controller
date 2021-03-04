@@ -14,8 +14,12 @@ def PluginInfo(result):
     return controller_pb2.PluginInfo(**result)
 
 def UpdateInfo(result):
-    result['data'] = change_struct_type(result['data'])
-    return controller_pb2.UpdateInfo(**result)
+    if 'data' in result:
+        result['data'] = change_struct_type(result['data'])
+        return controller_pb2.UpdateInfo(**result)
+    else:
+        no_data = {}
+        return controller_pb2.UpdateInfo(**no_data)
 
 def RetryResourceStatusInfo(resource_dict):
     return controller_pb2.RetryResourceStatusInfo(**resource_dict)
