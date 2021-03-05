@@ -22,6 +22,7 @@ _REFERENCE_KEYS = [
         'required_keys': [
             'reference.resource_id',
             'cloud_service_type',
+            'data.status',
             'data.role'
         ]
     }, {
