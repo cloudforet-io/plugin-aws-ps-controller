@@ -78,8 +78,8 @@ class AutoScalingConnector(BaseConnector):
                     DesiredCapacity=max_capacity,
                 )
                 print('Set asg_desired_capacity(max capacity may be changed by user) :' + str(asg_name) + ', capacity: ' + e_arr[1])
-
-        return res
+            else:
+                return None
 
     def get_asg(self, asg_name):
         try:
