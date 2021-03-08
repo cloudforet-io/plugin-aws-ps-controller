@@ -16,6 +16,7 @@ setup(
         'spaceone-core',
         'spaceone-api',
         'spaceone-tester',
+        'botocore',
         'boto3',
         'schematics'
     ],
