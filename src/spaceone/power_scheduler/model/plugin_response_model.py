@@ -34,7 +34,8 @@ _REFERENCE_KEYS = [
             'data.min_size',
             'data.instances',
             'data.power_scheduler.original_desired_capacity',
-            'data.power_scheduler.original_min_size'
+            'data.power_scheduler.original_min_size',
+            'data.power_scheduler.original_instance_type'
         ]
     }
 ]
