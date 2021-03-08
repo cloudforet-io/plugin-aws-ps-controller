@@ -1,15 +1,6 @@
-# Inventory Packages
-mongoengine
-redis
-langcodes
-ipaddress
-python-consul
-
-# Plugin Packages
+spaceone-core
+spaceone-api
+spaceone-tester
 botocore
 boto3
-
-# Spaceone Packages
-spaceone-core
-#spaceone-api
 schematics
