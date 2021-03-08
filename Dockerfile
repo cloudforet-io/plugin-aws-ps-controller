@@ -23,4 +23,3 @@ EXPOSE ${SPACEONE_PORT}
 
 ENTRYPOINT ["spaceone"]
 CMD ["grpc", "spaceone.power_scheduler"]
-ㅊ
