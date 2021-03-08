@@ -63,6 +63,7 @@ class AutoScalingConnector(BaseConnector):
                 DesiredCapacity=int(desired_capacity),
             )
             print('Set asg_desired_capacity :' + str(asg_name) + ', capacity: ' + str(desired_capacity))
+            return res
         except botocore.exceptions.ClientError as e:
             print (e)
 
@@ -78,8 +79,9 @@ class AutoScalingConnector(BaseConnector):
                     DesiredCapacity=max_capacity,
                 )
                 print('Set asg_desired_capacity(max capacity may be changed by user) :' + str(asg_name) + ', capacity: ' + e_arr[1])
+                return res
             else:
-                return None
+                raise e
 
     def get_asg(self, asg_name):
         try:
@@ -92,3 +94,4 @@ class AutoScalingConnector(BaseConnector):
             return response['AutoScalingGroups'][0]
         except Exception as e:
             _LOGGER.error(f'[AutoScalingConnector] get_asg error: {e}')
+            raise e

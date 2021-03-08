@@ -77,6 +77,7 @@ class EC2Connector(BaseConnector):
             return response
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] start_instances error: {e}')
+            raise e
 
     def stop_instances(self, instance_id, **query):
         try:
@@ -85,6 +86,7 @@ class EC2Connector(BaseConnector):
             return response
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] stop_instances error: {e}')
+            raise e
 
     def reboot_instance(self, instance_id, **query):
         try:
@@ -93,6 +95,7 @@ class EC2Connector(BaseConnector):
             return response
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] Reboot_instances error: {e}')
+            raise e
 
     def get_ec2_instance(self, instance_id):
         try:
@@ -101,3 +104,4 @@ class EC2Connector(BaseConnector):
             return response['Reservations'][0]['Instances'][0]
         except Exception as e:
             _LOGGER.error(f'[EC2Connector] get_ec2_instance error: {e}')
+            raise e

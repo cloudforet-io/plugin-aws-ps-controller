@@ -50,24 +50,40 @@ class RDSConnector(BaseConnector):
         self.rds_client = self.session.client('rds')
 
     def start_rds_instance(self, rds_instance_id):
-        res = self.rds_client.start_db_instance(DBInstanceIdentifier=rds_instance_id)
-        _LOGGER.info(f'[RDSConnector] Start RDS instance : {res}')
-        return res
-
-    def stop_rds_instance(self, rds_instance_id):
-        res = self.rds_client.stop_db_instance(DBInstanceIdentifier=rds_instance_id)
-        _LOGGER.info(f'[RDSConnector] Stop RDS instance : {res}')
-        return res
+        try:
+            res = self.rds_client.start_db_instance(DBInstanceIdentifier=rds_instance_id)
+            _LOGGER.info(f'[RDSConnector] Start RDS instance : {res}')
+            return res
+        except Exception as e:
+            _LOGGER.error(f'[RDSConnector] start_rds_instance error: {e}')
+            raise e
 
     def start_rds_cluster(self, rds_cluster_id):
-        res = self.rds_client.start_db_cluster(DBClusterIdentifier=rds_cluster_id)
-        _LOGGER.info(f'[RDSConnector] Start RDS cluster : {res}')
-        return res
+        try:
+            res = self.rds_client.start_db_cluster(DBClusterIdentifier=rds_cluster_id)
+            _LOGGER.info(f'[RDSConnector] Start RDS cluster : {res}')
+            return res
+        except Exception as e:
+            _LOGGER.error(f'[RDSConnector] start_rds_cluster error: {e}')
+            raise e
+
+    def stop_rds_instance(self, rds_instance_id):
+        try:
+            res = self.rds_client.stop_db_instance(DBInstanceIdentifier=rds_instance_id)
+            _LOGGER.info(f'[RDSConnector] Stop RDS instance : {res}')
+            return res
+        except Exception as e:
+            _LOGGER.error(f'[RDSConnector] stop_rds_instance error: {e}')
+            raise e
 
     def stop_rds_cluster(self, rds_cluster_id):
-        res = self.rds_client.stop_db_cluster(DBClusterIdentifier=rds_cluster_id)
-        _LOGGER.info(f'[RDSConnector] Stop RDS cluster : {res}')
-        return res
+        try:
+            res = self.rds_client.stop_db_cluster(DBClusterIdentifier=rds_cluster_id)
+            _LOGGER.info(f'[RDSConnector] Stop RDS cluster : {res}')
+            return res
+        except Exception as e:
+            _LOGGER.error(f'[RDSConnector] stop_rds_cluster error: {e}')
+            raise e
 
     def get_rds_instance(self, db_instance_id):
         try:
@@ -76,6 +92,7 @@ class RDSConnector(BaseConnector):
             return response['DBInstances'][0]
         except Exception as e:
             _LOGGER.error(f'[RDSConnector] get_rds_instance error: {e}')
+            raise e
 
     def get_rds_cluster(self, db_cluster_id):
         try:
@@ -84,3 +101,4 @@ class RDSConnector(BaseConnector):
             return response['DBClusters'][0]
         except Exception as e:
             _LOGGER.error(f'[RDSConnector] get_rds_cluster error: {e}')
+            raise e
